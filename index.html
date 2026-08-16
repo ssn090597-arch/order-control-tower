@@ -43,7 +43,7 @@
     <!-- SUMMARY METRICS BAR -->
     <div class="summary-bar">
         <div class="metric-card">
-            <div class="metric-title">Total Orders</div>
+            <div class="metric-title">Total Batch Quantity</div>
             <div class="metric-value" id="sum-total" style="color: #f8fafc;">0</div>
         </div>
         <div class="metric-card">
@@ -54,9 +54,10 @@
             <div class="metric-title">Packed</div>
             <div class="metric-value" id="sum-packed" style="color: #38bdf8;">0</div>
         </div>
+        <!-- UPDATED CARD: NEW ORDERS COUNT -->
         <div class="metric-card">
-            <div class="metric-title">Ready / Manifested</div>
-            <div class="metric-value" id="sum-manifest" style="color: #4ade80;">0</div>
+            <div class="metric-title">New Orders Count</div>
+            <div class="metric-value" id="sum-new-orders" style="color: #38bdf8;">0</div>
         </div>
     </div>
 
@@ -115,12 +116,15 @@
 
         function renderShipments(data) {
             if (!data || data.length === 0) {
-                document.getElementById("tb-shipments").innerHTML = `<tr><td colspan="7" style="text-align:center; padding:15px; color:#64748b;">No Active Batches Found</td></tr>`;
+                document.getElementById("tb-shipments").innerHTML = `<tr><td colspan="7" style="text-align:center; padding:15px; color:#4ade80;">🎉 All Batches Cleared!</td></tr>`;
+                document.getElementById("sum-total").innerText = 0;
+                document.getElementById("sum-packing").innerText = 0;
+                document.getElementById("sum-packed").innerText = 0;
                 return;
             }
 
             let html = "";
-            let tTotal = 0, tPacking = 0, tPacked = 0, tManifest = 0;
+            let tTotal = 0, tPacking = 0, tPacked = 0;
 
             data.forEach(s => {
                 let badge = s.channel === "Myntra" ? "badge-myntra" : (s.channel === "Flipkart" ? "badge-fk" : "badge-sp");
@@ -128,7 +132,6 @@
                 tTotal += s.total || 0;
                 tPacking += s.packing || 0;
                 tPacked += s.packed || 0;
-                tManifest += s.manifest || 0;
 
                 html += `<tr>
                     <td><span class="${badge}">${s.channel}</span></td>
@@ -145,12 +148,14 @@
             document.getElementById("sum-total").innerText = tTotal;
             document.getElementById("sum-packing").innerText = tPacking;
             document.getElementById("sum-packed").innerText = tPacked;
-            document.getElementById("sum-manifest").innerText = tManifest;
         }
 
         function renderOrders(data) {
+            let totalOrders = data ? data.length : 0;
+            document.getElementById("sum-new-orders").innerText = totalOrders;
+
             if (!data || data.length === 0) {
-                document.getElementById("tb-orders").innerHTML = `<tr><td colspan="4" style="text-align:center; padding:15px; color:#64748b;">No Orders Found</td></tr>`;
+                document.getElementById("tb-orders").innerHTML = `<tr><td colspan="4" style="text-align:center; padding:15px; color:#4ade80;">🎉 No Pending Orders!</td></tr>`;
                 return;
             }
 

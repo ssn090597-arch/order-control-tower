@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Browntape Control Tower</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 0; }
+        body { background: #f1f5f9; padding: 20px; color: #1e293b; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .header h2 { font-size: 20px; color: #0f172a; }
+        .sync-badge { font-size: 13px; color: #059669; font-weight: 600; background: #d1fae5; padding: 6px 12px; border-radius: 20px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .card { background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card h4 { font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 8px; }
+        .card div { font-size: 26px; font-weight: bold; }
+        
+        .c-pending { color: #e11d48; }
+        .c-packed { color: #059669; }
+        .c-manifest { color: #2563eb; }
+        .c-total { color: #475569; }
+
+        table { width: 100%; background: white; border-collapse: collapse; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        th, td { padding: 14px 18px; text-align: left; font-size: 14px; border-bottom: 1px solid #f1f5f9; }
+        th { background: #0f172a; color: white; font-size: 12px; text-transform: uppercase; }
+        
+        .badge { padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 12px; display: inline-block; }
+        .bg-pending { background: #ffe4e6; color: #e11d48; }
+        .bg-packed { background: #d1fae5; color: #059669; }
+        .bg-manifest { background: #dbeafe; color: #2563eb; }
+        
+        .alert-box { background: #fff1f2; border: 1px solid #fecdd3; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #9f1239; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>⚡ Live Browntape Operations Control Tower</h2>
+        <span class="sync-badge" id="lastUpdated">🟢 Live Refresh Active</span>
+    </div>
+
+    <div class="alert-box">
+        💡 <b>How to Sync:</b> Apne Browntape tab par jayein aur Bookmark <b>"Sync Data"</b> par click karein. Ye screen automatic update ho jayegi!
+    </div>
+
+    <!-- Live Status Cards -->
+    <div class="stats-grid">
+        <div class="card"><h4>Total Orders</h4><div id="totOrders" class="c-total">0</div></div>
+        <div class="card"><h4>Pending Packing</h4><div id="totPending" class="c-pending">0</div></div>
+        <div class="card"><h4>Packed Orders</h4><div id="totPacked" class="c-packed">0</div></div>
+        <div class="card"><h4>Manifest Done</h4><div id="totManifested" class="c-manifest">0</div></div>
+    </div>
+
+    <!-- Live Data Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Batch Number</th>
+                <th>Total Orders</th>
+                <th>Pending (Unpacked)</th>
+                <th>Packed Status</th>
+                <th>Manifested Status</th>
+                <th>Packing Alert</th>
+            </tr>
+        </thead>
+        <tbody id="tableData">
+            <tr><td colspan="6" style="text-align:center; padding: 30px; color: #94a3b8;">Waiting for data sync...</td></tr>
+        </tbody>
+    </table>
+
+<script>
+    function loadLiveStore() {
+        const raw = localStorage.getItem("LIVE_BT_DATA");
+        if (!raw) return;
+
+        const data = JSON.parse(raw);
+        const tbody = document.getElementById("tableData");
+        tbody.innerHTML = "";
+
+        let sumTotal = 0, sumPending = 0, sumPacked = 0, sumManifested = 0;
+
+        data.forEach(item => {
+            let t = parseInt(item.total) || 0;
+            let p = parseInt(item.pending) || 0;
+            let pk = parseInt(item.packed) || 0;
+            let m = parseInt(item.manifested) || 0;
+
+            sumTotal += t;
+            sumPending += p;
+            sumPacked += pk;
+            sumManifested += m;
+
+            let row = `<tr>
+                <td><b style="color:#2563eb;">${item.batch_no}</b></td>
+                <td><b>${t}</b></td>
+                <td><span class="badge ${p > 0 ? 'bg-pending' : ''}">${p} Pending</span></td>
+                <td><span class="badge bg-packed">${pk} Packed</span></td>
+                <td><span class="badge bg-manifest">${m} Manifested</span></td>
+                <td>${p > 0 ? '🚨 <b style="color:#e11d48;">PACKING PENDING</b>' : '✅ <b>DISPATCH READY</b>'}</td>
+            </tr>`;
+            tbody.innerHTML += row;
+        });
+
+        document.getElementById("totOrders").innerText = sumTotal;
+        document.getElementById("totPending").innerText = sumPending;
+        document.getElementById("totPacked").innerText = sumPacked;
+        document.getElementById("totManifested").innerText = sumManifested;
+        document.getElementById("lastUpdated").innerText = "Last Updated: " + new Date().toLocaleTimeString();
+    }
+
+    // Har 2 second me auto-check shortcut data
+    setInterval(loadLiveStore, 2000);
+    loadLiveStore();
+</script>
+
+</body>
+</html>

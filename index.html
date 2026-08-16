@@ -26,7 +26,7 @@
 
     <div class="header">
         <h2>⚡ Live Browntape Operations Control Tower</h2>
-        <span class="sync-badge" id="lastUpdated">🟢 Live Sync Active</span>
+        <span class="sync-badge" id="lastUpdated">🟢 Live Refresh Active</span>
     </div>
 
     <div class="stats-grid">
@@ -48,7 +48,7 @@
             </tr>
         </thead>
         <tbody id="tableData">
-            <tr><td colspan="6" style="text-align:center; padding: 30px; color: #94a3b8;">Connecting to live stream...</td></tr>
+            <tr><td colspan="6" style="text-align:center; padding: 30px; color: #94a3b8;">Waiting for live extension stream...</td></tr>
         </tbody>
     </table>
 
@@ -84,12 +84,12 @@
         document.getElementById("lastUpdated").innerText = "Last Synced: " + new Date().toLocaleTimeString();
     }
 
-    const bc = new BroadcastChannel('browntape_live_channel');
-    bc.onmessage = (event) => {
-        if (event.data && Array.isArray(event.data)) {
-            renderData(event.data);
+    // Window Message Receiver
+    window.addEventListener("message", (event) => {
+        if (event.data && event.data.type === "BT_DATA_UPDATE") {
+            renderData(event.data.data);
         }
-    };
+    });
 </script>
 
 </body>

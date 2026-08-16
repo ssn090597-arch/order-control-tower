@@ -6,14 +6,23 @@
     <title>Browntape Combined Control Tower</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 15px; }
-        .header { background: #1e293b; padding: 15px 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
-        .header h2 { margin: 0; font-size: 20px; color: #38bdf8; }
+        .header { background: #1e293b; padding: 12px 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
+        .header h2 { margin: 0; font-size: 18px; color: #38bdf8; }
+        
+        /* Summary Metrics Cards Bar */
+        .summary-bar { display: flex; gap: 12px; margin-top: 15px; }
+        .metric-card { flex: 1; background: #1e293b; padding: 12px; border-radius: 8px; border: 1px solid #334155; text-align: center; }
+        .metric-title { font-size: 11px; color: #94a3b8; font-weight: bold; text-transform: uppercase; }
+        .metric-value { font-size: 22px; font-weight: bold; margin-top: 4px; }
+
         .container { display: flex; gap: 15px; margin-top: 15px; }
         .section { flex: 1; background: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #334155; }
-        .section-title { font-size: 15px; font-weight: bold; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #38bdf8; display: flex; justify-content: space-between; }
+        .section-title { font-size: 14px; font-weight: bold; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #38bdf8; text-align: center; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-        th { background: #0f172a; color: #94a3b8; padding: 8px; font-size: 11px; text-align: left; text-transform: uppercase; border-bottom: 1px solid #334155; }
-        td { padding: 9px 8px; border-bottom: 1px solid #334155; font-size: 12px; }
+        th { background: #0f172a; color: #94a3b8; padding: 8px; font-size: 11px; text-align: center; text-transform: uppercase; border-bottom: 1px solid #334155; }
+        td { padding: 9px 8px; border-bottom: 1px solid #334155; font-size: 12px; text-align: center; }
+        
         .badge-myntra { background: #831843; color: #fbcfe8; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; }
         .badge-fk { background: #1e3a8a; color: #bfdbfe; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; }
         .badge-sp { background: #14532d; color: #bbf7d0; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; }
@@ -28,7 +37,27 @@
 
     <div class="header">
         <h2>⚡ Live Browntape Control Tower</h2>
-        <span style="color: #4ade80; font-size: 13px;">● Live Auto-Syncing</span>
+        <span style="color: #4ade80; font-size: 12px;">● Auto Sync Active</span>
+    </div>
+
+    <!-- SUMMARY METRICS BAR -->
+    <div class="summary-bar">
+        <div class="metric-card">
+            <div class="metric-title">Total Orders</div>
+            <div class="metric-value" id="sum-total" style="color: #f8fafc;">0</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">Pending Packing</div>
+            <div class="metric-value" id="sum-packing" style="color: #fbbf24;">0</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">Packed</div>
+            <div class="metric-value" id="sum-packed" style="color: #38bdf8;">0</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">Ready / Manifested</div>
+            <div class="metric-value" id="sum-manifest" style="color: #4ade80;">0</div>
+        </div>
     </div>
 
     <div class="container">
@@ -87,8 +116,16 @@
         function renderShipments(data) {
             if (!data || data.length === 0) return;
             let html = "";
+            let tTotal = 0, tPacking = 0, tPacked = 0, tManifest = 0;
+
             data.forEach(s => {
                 let badge = s.channel === "Myntra" ? "badge-myntra" : (s.channel === "Flipkart" ? "badge-fk" : "badge-sp");
+                
+                tTotal += s.total;
+                tPacking += s.packing;
+                tPacked += s.packed;
+                tManifest += s.manifest;
+
                 html += `<tr>
                     <td><span class="${badge}">${s.channel}</span></td>
                     <td><b>${s.batch_no}</b></td>
@@ -99,7 +136,14 @@
                     <td>${s.others}</td>
                 </tr>`;
             });
+
             document.getElementById("tb-shipments").innerHTML = html;
+            
+            // Update Summary Cards
+            document.getElementById("sum-total").innerText = tTotal;
+            document.getElementById("sum-packing").innerText = tPacking;
+            document.getElementById("sum-packed").innerText = tPacked;
+            document.getElementById("sum-manifest").innerText = tManifest;
         }
 
         function renderOrders(data) {

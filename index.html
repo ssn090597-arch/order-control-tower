@@ -3,88 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Browntape Control Tower</title>
+    <title>Live Order-Wise Control Tower</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 0; }
         body { background: #f1f5f9; padding: 20px; color: #1e293b; }
         .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .header h2 { font-size: 20px; color: #0f172a; }
         .sync-badge { font-size: 13px; color: #059669; font-weight: 600; background: #d1fae5; padding: 6px 12px; border-radius: 20px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        
+        /* Stats Cards Layout Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .card { background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .card h4 { font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 8px; }
-        .card div { font-size: 26px; font-weight: bold; }
-        .c-pending { color: #e11d48; } .c-packed { color: #059669; } .c-manifest { color: #2563eb; } .c-total { color: #475569; }
+        .card div { font-size: 24px; font-weight: bold; }
+        
+        .c-total { color: #475569; }
+        .c-picking { color: #d97706; }
+        .c-packing { color: #e11d48; }
+        .c-manifest { color: #2563eb; }
+
+        /* Table Design */
         table { width: 100%; background: white; border-collapse: collapse; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        th, td { padding: 14px 18px; text-align: left; font-size: 14px; border-bottom: 1px solid #f1f5f9; }
-        th { background: #0f172a; color: white; font-size: 12px; text-transform: uppercase; }
-        .badge { padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 12px; display: inline-block; }
-        .bg-pending { background: #ffe4e6; color: #e11d48; } .bg-packed { background: #d1fae5; color: #059669; } .bg-manifest { background: #dbeafe; color: #2563eb; }
+        th, td { padding: 12px 16px; text-align: left; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
+        th { background: #0f172a; color: white; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* Badges & Alert Styling */
+        .badge { padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 11px; display: inline-block; }
+        .bg-picking { background: #fef3c7; color: #d97706; }
+        .bg-packing { background: #ffe4e6; color: #e11d48; }
+        .bg-manifest { background: #dbeafe; color: #2563eb; }
+        .bg-completed { background: #d1fae5; color: #059669; }
+
+        .sla-ok { color: #d97706; font-weight: bold; }
+        .sla-breached { color: #e11d48; font-weight: bold; background: #ffe4e6; padding: 2px 6px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2>⚡ Live Browntape Operations Control Tower</h2>
-        <span class="sync-badge" id="lastUpdated">🟢 Live Refresh Active</span>
+        <h2>⚡ Live Browntape Order-Level Control Tower</h2>
+        <span class="sync-badge" id="lastUpdated">🟢 Live Sync Active</span>
     </div>
 
+    <!-- Top Summary Dashboard Cards -->
     <div class="stats-grid">
         <div class="card"><h4>Total Orders</h4><div id="totOrders" class="c-total">0</div></div>
-        <div class="card"><h4>Pending Packing</h4><div id="totPending" class="c-pending">0</div></div>
-        <div class="card"><h4>Packed Orders</h4><div id="totPacked" class="c-packed">0</div></div>
-        <div class="card"><h4>Manifest Done</h4><div id="totManifested" class="c-manifest">0</div></div>
+        <div class="card"><h4>Pending Picking</h4><div id="totPicking" class="c-picking">0</div></div>
+        <div class="card"><h4>Pending Packing</h4><div id="totPacking" class="c-packing">0</div></div>
+        <div class="card"><h4>Pending Manifest</h4><div id="totManifest" class="c-manifest">0</div></div>
     </div>
 
+    <!-- Individual Orders Table -->
     <table>
         <thead>
             <tr>
+                <th>Order ID / Channel</th>
                 <th>Batch Number</th>
-                <th>Total Orders</th>
-                <th>Pending (Unpacked)</th>
-                <th>Packed Status</th>
-                <th>Manifested Status</th>
-                <th>Packing Alert</th>
+                <th>SKU / Product Info</th>
+                <th>Current Status</th>
+                <th>SLA Time / Breach Status</th>
             </tr>
         </thead>
         <tbody id="tableData">
-            <tr><td colspan="6" style="text-align:center; padding: 30px; color: #94a3b8;">Waiting for live extension stream...</td></tr>
+            <tr><td colspan="5" style="text-align:center; padding: 30px; color: #94a3b8;">Waiting for live order stream...</td></tr>
         </tbody>
     </table>
 
 <script>
-    function renderData(data) {
+    function renderData(ordersData) {
         const tbody = document.getElementById("tableData");
         tbody.innerHTML = "";
-        let sumTotal = 0, sumPending = 0, sumPacked = 0, sumManifested = 0;
 
-        data.forEach(item => {
-            let t = parseInt(item.total) || 0;
-            let p = parseInt(item.pending) || 0;
-            let pk = parseInt(item.packed) || 0;
-            let m = parseInt(item.manifested) || 0;
+        let sumTotal = ordersData.length;
+        let sumPicking = 0;
+        let sumPacking = 0;
+        let sumManifest = 0;
 
-            sumTotal += t; sumPending += p; sumPacked += pk; sumManifested += m;
+        ordersData.forEach(item => {
+            // Count Statuses
+            let status = (item.status || "").toLowerCase();
+            if (status.includes("picking")) sumPicking++;
+            else if (status.includes("packing") || status.includes("processing")) sumPacking++;
+            else if (status.includes("manifest")) sumManifest++;
+
+            // Dynamic Badge Class
+            let badgeClass = 'bg-completed';
+            if (status.includes("picking")) badgeClass = 'bg-picking';
+            else if (status.includes("packing") || status.includes("processing")) badgeClass = 'bg-packing';
+            else if (status.includes("manifest")) badgeClass = 'bg-manifest';
+
+            // Check SLA Breach Status
+            let isBreached = item.sla_text && item.sla_text.toLowerCase().includes("breached");
+            let slaClass = isBreached ? "sla-breached" : "sla-ok";
 
             let row = `<tr>
-                <td><b style="color:#2563eb;">${item.batch_no}</b></td>
-                <td><b>${t}</b></td>
-                <td><span class="badge ${p > 0 ? 'bg-pending' : ''}">${p} Pending</span></td>
-                <td><span class="badge bg-packed">${pk} Packed</span></td>
-                <td><span class="badge bg-manifest">${m} Manifested</span></td>
-                <td>${p > 0 ? '🚨 <b style="color:#e11d48;">PACKING PENDING</b>' : '✅ <b>DISPATCH READY</b>'}</td>
+                <td>
+                    <b style="color:#0f172a;">${item.order_id || 'N/A'}</b><br>
+                    <small style="color:#64748b;">${item.channel || ''}</small>
+                </td>
+                <td><b style="color:#2563eb;">${item.batch_no || 'Unassigned'}</b></td>
+                <td><span style="font-size:12px; color:#334155;">${item.sku || 'N/A'}</span></td>
+                <td><span class="badge ${badgeClass}">${item.status.toUpperCase()}</span></td>
+                <td><span class="${slaClass}">${isBreached ? '🚨 ' : '⏰ '}${item.sla_text || 'No SLA Data'}</span></td>
             </tr>`;
+
             tbody.innerHTML += row;
         });
 
+        // Update Top Metrics Cards
         document.getElementById("totOrders").innerText = sumTotal;
-        document.getElementById("totPending").innerText = sumPending;
-        document.getElementById("totPacked").innerText = sumPacked;
-        document.getElementById("totManifested").innerText = sumManifested;
+        document.getElementById("totPicking").innerText = sumPicking;
+        document.getElementById("totPacking").innerText = sumPacking;
+        document.getElementById("totManifest").innerText = sumManifest;
         document.getElementById("lastUpdated").innerText = "Last Synced: " + new Date().toLocaleTimeString();
     }
 
-    // Window Message Receiver
+    // Extension Web Message Listener
     window.addEventListener("message", (event) => {
         if (event.data && event.data.type === "BT_DATA_UPDATE") {
             renderData(event.data.data);

@@ -3,128 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Order-Wise Control Tower</title>
+    <title>Live Pending Control Tower</title>
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 0; }
-        body { background: #f1f5f9; padding: 20px; color: #1e293b; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .header h2 { font-size: 20px; color: #0f172a; }
-        .sync-badge { font-size: 13px; color: #059669; font-weight: 600; background: #d1fae5; padding: 6px 12px; border-radius: 20px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; }
+        .stat-card { background: #fff; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .stat-card h3 { margin: 0; font-size: 13px; color: #666; text-transform: uppercase; }
+        .stat-card div { font-size: 28px; font-weight: bold; margin-top: 10px; color: #2c3e50; }
         
-        /* Stats Cards Layout Grid */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .card { background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .card h4 { font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 8px; }
-        .card div { font-size: 24px; font-weight: bold; }
+        .table-container { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        th { background: #1a252f; color: #fff; padding: 12px 15px; text-transform: uppercase; font-size: 12px; }
+        td { padding: 12px 15px; border-bottom: 1px solid #eee; }
         
-        .c-total { color: #475569; }
-        .c-picking { color: #d97706; }
-        .c-packing { color: #e11d48; }
-        .c-manifest { color: #2563eb; }
-
-        /* Table Design */
-        table { width: 100%; background: white; border-collapse: collapse; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        th, td { padding: 12px 16px; text-align: left; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
-        th { background: #0f172a; color: white; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; display: inline-block; }
+        .picking { background: #fff3cd; color: #856404; }
+        .packing { background: #f8d7da; color: #721c24; }
+        .manifest { background: #d1ecf1; color: #0c5460; }
         
-        /* Badges & Alert Styling */
-        .badge { padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 11px; display: inline-block; }
-        .bg-picking { background: #fef3c7; color: #d97706; }
-        .bg-packing { background: #ffe4e6; color: #e11d48; }
-        .bg-manifest { background: #dbeafe; color: #2563eb; }
-        .bg-completed { background: #d1fae5; color: #059669; }
-
-        .sla-ok { color: #d97706; font-weight: bold; }
-        .sla-breached { color: #e11d48; font-weight: bold; background: #ffe4e6; padding: 2px 6px; border-radius: 4px; }
+        .controls { display: flex; justify-content: space-between; padding: 15px; background: #fff; border-top: 1px solid #eee; }
+        button { padding: 8px 15px; background: #2c3e50; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2>⚡ Live Browntape Order-Level Control Tower</h2>
-        <span class="sync-badge" id="lastUpdated">🟢 Live Sync Active</span>
+        <h2>⚡ Live Pending Orders Control Tower (Filtered)</h2>
+        <span id="sync-status" style="color: #27ae60; font-weight: bold;">● Live Sync Active</span>
     </div>
 
-    <!-- Top Summary Dashboard Cards -->
     <div class="stats-grid">
-        <div class="card"><h4>Total Orders</h4><div id="totOrders" class="c-total">0</div></div>
-        <div class="card"><h4>Pending Picking</h4><div id="totPicking" class="c-picking">0</div></div>
-        <div class="card"><h4>Pending Packing</h4><div id="totPacking" class="c-packing">0</div></div>
-        <div class="card"><h4>Pending Manifest</h4><div id="totManifest" class="c-manifest">0</div></div>
+        <div class="stat-card"><h3>Active Pending Orders</h3><div id="cnt-total">0</div></div>
+        <div class="stat-card"><h3>Pending Picking</h3><div id="cnt-picking" style="color: #e67e22;">0</div></div>
+        <div class="stat-card"><h3>Pending Packing</h3><div id="cnt-packing" style="color: #e74c3c;">0</div></div>
+        <div class="stat-card"><h3>Pending Manifest</h3><div id="cnt-manifest" style="color: #2980b9;">0</div></div>
     </div>
 
-    <!-- Individual Orders Table -->
-    <table>
-        <thead>
-            <tr>
-                <th>Order ID / Channel</th>
-                <th>Batch Number</th>
-                <th>SKU / Product Info</th>
-                <th>Current Status</th>
-                <th>SLA Time / Breach Status</th>
-            </tr>
-        </thead>
-        <tbody id="tableData">
-            <tr><td colspan="5" style="text-align:center; padding: 30px; color: #94a3b8;">Waiting for live order stream...</td></tr>
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID / Channel</th>
+                    <th>Batch Number</th>
+                    <th>SKU / Product Info</th>
+                    <th>Current Status</th>
+                    <th>SLA Time / Breach Status</th>
+                </tr>
+            </thead>
+            <tbody id="order-rows">
+                <tr><td colspan="5" style="text-align: center;">Waiting for pending orders stream...</td></tr>
+            </tbody>
+        </table>
+        
+        <div class="controls">
+            <button id="btn-prev" onclick="changePage(-1)">Previous</button>
+            <span id="page-info">Page 1</span>
+            <button id="btn-next" onclick="changePage(1)">Next</button>
+        </div>
+    </div>
 
-<script>
-    function renderData(ordersData) {
-        const tbody = document.getElementById("tableData");
-        tbody.innerHTML = "";
+    <script>
+        let allOrders = [];
+        let currentPage = 1;
+        const pageSize = 100;
 
-        let sumTotal = ordersData.length;
-        let sumPicking = 0;
-        let sumPacking = 0;
-        let sumManifest = 0;
-
-        ordersData.forEach(item => {
-            // Count Statuses
-            let status = (item.status || "").toLowerCase();
-            if (status.includes("picking")) sumPicking++;
-            else if (status.includes("packing") || status.includes("processing")) sumPacking++;
-            else if (status.includes("manifest")) sumManifest++;
-
-            // Dynamic Badge Class
-            let badgeClass = 'bg-completed';
-            if (status.includes("picking")) badgeClass = 'bg-picking';
-            else if (status.includes("packing") || status.includes("processing")) badgeClass = 'bg-packing';
-            else if (status.includes("manifest")) badgeClass = 'bg-manifest';
-
-            // Check SLA Breach Status
-            let isBreached = item.sla_text && item.sla_text.toLowerCase().includes("breached");
-            let slaClass = isBreached ? "sla-breached" : "sla-ok";
-
-            let row = `<tr>
-                <td>
-                    <b style="color:#0f172a;">${item.order_id || 'N/A'}</b><br>
-                    <small style="color:#64748b;">${item.channel || ''}</small>
-                </td>
-                <td><b style="color:#2563eb;">${item.batch_no || 'Unassigned'}</b></td>
-                <td><span style="font-size:12px; color:#334155;">${item.sku || 'N/A'}</span></td>
-                <td><span class="badge ${badgeClass}">${item.status.toUpperCase()}</span></td>
-                <td><span class="${slaClass}">${isBreached ? '🚨 ' : '⏰ '}${item.sla_text || 'No SLA Data'}</span></td>
-            </tr>`;
-
-            tbody.innerHTML += row;
+        window.addEventListener("message", (event) => {
+            if (event.data && event.data.type === "BT_DATA_UPDATE") {
+                allOrders = event.data.data || [];
+                updateCounters();
+                renderTable();
+            }
         });
 
-        // Update Top Metrics Cards
-        document.getElementById("totOrders").innerText = sumTotal;
-        document.getElementById("totPicking").innerText = sumPicking;
-        document.getElementById("totPacking").innerText = sumPacking;
-        document.getElementById("totManifest").innerText = sumManifest;
-        document.getElementById("lastUpdated").innerText = "Last Synced: " + new Date().toLocaleTimeString();
-    }
-
-    // Extension Web Message Listener
-    window.addEventListener("message", (event) => {
-        if (event.data && event.data.type === "BT_DATA_UPDATE") {
-            renderData(event.data.data);
+        function updateCounters() {
+            document.getElementById("cnt-total").innerText = allOrders.length;
+            document.getElementById("cnt-picking").innerText = allOrders.filter(o => o.status === "PENDING PICKING").length;
+            document.getElementById("cnt-packing").innerText = allOrders.filter(o => o.status === "PENDING PACKING").length;
+            document.getElementById("cnt-manifest").innerText = allOrders.filter(o => o.status === "PENDING MANIFEST").length;
         }
-    });
-</script>
 
+        function renderTable() {
+            const tbody = document.getElementById("order-rows");
+            if (allOrders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: green; font-weight: bold;">🎉 All Orders Processed & Manifested! No Pending Orders.</td></tr>';
+                return;
+            }
+
+            const startIdx = (currentPage - 1) * pageSize;
+            const endIdx = startIdx + pageSize;
+            const pageData = allOrders.slice(startIdx, endIdx);
+
+            const fragment = document.createDocumentFragment();
+
+            pageData.forEach(order => {
+                const tr = document.createElement("tr");
+                let badgeClass = "picking";
+                if (order.status === "PENDING PACKING") badgeClass = "packing";
+                if (order.status === "PENDING MANIFEST") badgeClass = "manifest";
+
+                tr.innerHTML = `
+                    <td><b>${order.order_id}</b><br><small style="color:#777;">${order.channel}</small></td>
+                    <td><b style="color:#2980b9;">${order.batch_no}</b></td>
+                    <td>${order.sku}</td>
+                    <td><span class="badge ${badgeClass}">${order.status}</span></td>
+                    <td><b>${order.sla_text}</b></td>
+                `;
+                fragment.appendChild(tr);
+            });
+
+            tbody.innerHTML = "";
+            tbody.appendChild(fragment);
+
+            const maxPages = Math.ceil(allOrders.length / pageSize) || 1;
+            document.getElementById("page-info").innerText = `Page ${currentPage} of ${maxPages} (${allOrders.length} Pending Orders)`;
+            document.getElementById("btn-prev").disabled = currentPage === 1;
+            document.getElementById("btn-next").disabled = currentPage >= maxPages;
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            renderTable();
+        }
+    </script>
 </body>
 </html>

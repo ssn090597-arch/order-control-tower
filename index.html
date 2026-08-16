@@ -3,77 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dual View - Browntape Control Tower</title>
+    <title>Browntape Combined Control Tower</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 15px; }
-        .header { background: #1e293b; color: #fff; padding: 15px 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .header h2 { margin: 0; font-size: 20px; font-weight: 700; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 15px; }
+        .header { background: #1e293b; padding: 15px 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
+        .header h2 { margin: 0; font-size: 20px; color: #38bdf8; }
         .container { display: flex; gap: 15px; margin-top: 15px; }
-        .section { flex: 1; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
-        .section-title { font-size: 15px; font-weight: bold; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 3px solid #3b82f6; display: flex; justify-content: space-between; align-items: center; }
+        .section { flex: 1; background: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #334155; }
+        .section-title { font-size: 15px; font-weight: bold; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #38bdf8; display: flex; justify-content: space-between; }
         table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-        th { background: #334155; color: #fff; padding: 10px 8px; font-size: 11px; text-align: left; text-transform: uppercase; }
-        td { padding: 8px; border-bottom: 1px solid #e2e8f0; font-size: 12px; color: #1e293b; }
-        .badge-myntra { background: #fce7f3; color: #be185d; padding: 3px 7px; border-radius: 4px; font-weight: bold; font-size: 11px; }
-        .badge-fk { background: #dbeafe; color: #1e40af; padding: 3px 7px; border-radius: 4px; font-weight: bold; font-size: 11px; }
-        .badge-sp { background: #dcfce7; color: #15803d; padding: 3px 7px; border-radius: 4px; font-weight: bold; font-size: 11px; }
-        .sla-tag { color: #dc2626; font-weight: bold; background: #fef2f2; padding: 3px 6px; border-radius: 4px; border: 1px solid #fecaca; }
-        code { background: #f1f5f9; padding: 2px 5px; border-radius: 3px; font-family: monospace; font-size: 11px; }
+        th { background: #0f172a; color: #94a3b8; padding: 8px; font-size: 11px; text-align: left; text-transform: uppercase; border-bottom: 1px solid #334155; }
+        td { padding: 9px 8px; border-bottom: 1px solid #334155; font-size: 12px; }
+        .badge-myntra { background: #831843; color: #fbcfe8; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; }
+        .badge-fk { background: #1e3a8a; color: #bfdbfe; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; }
+        .badge-sp { background: #14532d; color: #bbf7d0; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; }
+        .sla-urgent { color: #f87171; font-weight: bold; background: #450a0a; padding: 3px 6px; border-radius: 4px; border: 1px solid #7f1d1d; }
+        .st-packing { color: #fbbf24; font-weight: bold; }
+        .st-packed { color: #38bdf8; font-weight: bold; }
+        .st-manifest { color: #4ade80; font-weight: bold; }
+        code { background: #0f172a; color: #e2e8f0; padding: 2px 5px; border-radius: 3px; font-family: monospace; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2>⚡ Live Browntape Control Tower (Combined Screen)</h2>
-        <span style="color: #4ade80; font-weight: bold; font-size: 13px;">● Realtime Sync Active</span>
+        <h2>⚡ Live Browntape Control Tower</h2>
+        <span style="color: #4ade80; font-size: 13px;">● Live Auto-Syncing</span>
     </div>
 
     <div class="container">
-        <!-- SHIPMENTS / BATCHES SECTION -->
+        <!-- SHIPMENTS BREAKDOWN -->
         <div class="section">
-            <div class="section-title" style="border-color: #f59e0b; color: #b45309;">
-                📦 BATCHES & SHIPMENTS DATA
+            <div class="section-title" style="border-color: #f59e0b; color: #fbbf24;">
+                📦 BATCH & SHIPMENTS STATUS BREAKDOWN
             </div>
             <table>
                 <thead>
                     <tr>
-                        <th>CHANNEL</th>
-                        <th>BATCH NO</th>
-                        <th>TOTAL</th>
-                        <th>TO ACCEPT</th>
-                        <th>PACKING</th>
-                        <th>MANIFESTED</th>
+                        <th>Channel</th>
+                        <th>Batch No</th>
+                        <th>Total</th>
+                        <th>Pending Packing</th>
+                        <th>Packed</th>
+                        <th>Ready / Manifested</th>
+                        <th>Others</th>
                     </tr>
                 </thead>
                 <tbody id="tb-shipments">
-                    <tr><td colspan="6" style="text-align:center; padding: 15px; color: #64748b;">Open Shipments tab in Browntape to sync data...</td></tr>
+                    <tr><td colspan="7" style="text-align:center; padding:15px; color:#64748b;">Syncing Shipments Data...</td></tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- NEW ORDERS & SLA SECTION -->
+        <!-- ORDERS SLA SORTED -->
         <div class="section">
-            <div class="section-title" style="border-color: #10b981; color: #047857;">
-                🛒 NEW ORDERS & SLA DATA
+            <div class="section-title" style="border-color: #38bdf8; color: #38bdf8;">
+                🛒 NEW ORDERS (SLA TIME PRIORITIZED)
             </div>
             <table>
                 <thead>
                     <tr>
-                        <th>ORD REF ID</th>
-                        <th>CHANNEL</th>
-                        <th>SKU CODE</th>
-                        <th>SLA REMAINING</th>
+                        <th>Ord Ref ID</th>
+                        <th>Channel</th>
+                        <th>SKU Code</th>
+                        <th>SLA Priority Time</th>
                     </tr>
                 </thead>
                 <tbody id="tb-orders">
-                    <tr><td colspan="4" style="text-align:center; padding: 15px; color: #64748b;">Open Orders tab in Browntape to sync data...</td></tr>
+                    <tr><td colspan="4" style="text-align:center; padding:15px; color:#64748b;">Syncing Orders Data...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <script>
-        // Listen for direct broadcast signal from content.js
         window.addEventListener("message", function(e) {
             if (e.data && e.data.type === "BT_DUAL_SYNC") {
                 renderShipments(e.data.shipments);
@@ -85,17 +88,15 @@
             if (!data || data.length === 0) return;
             let html = "";
             data.forEach(s => {
-                let badgeClass = "badge-sp";
-                if (s.channel === "Myntra") badgeClass = "badge-myntra";
-                else if (s.channel === "Flipkart") badgeClass = "badge-fk";
-
+                let badge = s.channel === "Myntra" ? "badge-myntra" : (s.channel === "Flipkart" ? "badge-fk" : "badge-sp");
                 html += `<tr>
-                    <td><span class="${badgeClass}">${s.channel}</span></td>
+                    <td><span class="${badge}">${s.channel}</span></td>
                     <td><b>${s.batch_no}</b></td>
                     <td><b>${s.total}</b></td>
-                    <td><b style="color:#d97706;">${s.to_accept}</b></td>
-                    <td><b style="color:#dc2626;">${s.packing}</b></td>
-                    <td><b style="color:#2563eb;">${s.manifest}</b></td>
+                    <td><span class="st-packing">${s.packing}</span></td>
+                    <td><span class="st-packed">${s.packed}</span></td>
+                    <td><span class="st-manifest">${s.manifest}</span></td>
+                    <td>${s.others}</td>
                 </tr>`;
             });
             document.getElementById("tb-shipments").innerHTML = html;
@@ -105,15 +106,12 @@
             if (!data || data.length === 0) return;
             let html = "";
             data.forEach(o => {
-                let badgeClass = "badge-sp";
-                if (o.channel === "Myntra") badgeClass = "badge-myntra";
-                else if (o.channel === "Flipkart") badgeClass = "badge-fk";
-
+                let badge = o.channel === "Myntra" ? "badge-myntra" : (o.channel === "Flipkart" ? "badge-fk" : "badge-sp");
                 html += `<tr>
                     <td><b>${o.order_id}</b></td>
-                    <td><span class="${badgeClass}">${o.channel}</span></td>
+                    <td><span class="${badge}">${o.channel}</span></td>
                     <td><code>${o.sku}</code></td>
-                    <td><span class="sla-tag">${o.sla_text}</span></td>
+                    <td><span class="sla-urgent">${o.sla_text}</span></td>
                 </tr>`;
             });
             document.getElementById("tb-orders").innerHTML = html;

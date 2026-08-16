@@ -3,128 +3,280 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Pending Control Tower</title>
+    <title>Live Pending Orders Control Tower</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; }
-        .stat-card { background: #fff; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .stat-card h3 { margin: 0; font-size: 13px; color: #666; text-transform: uppercase; }
-        .stat-card div { font-size: 28px; font-weight: bold; margin-top: 10px; color: #2c3e50; }
-        
-        .table-container { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-        th { background: #1a252f; color: #fff; padding: 12px 15px; text-transform: uppercase; font-size: 12px; }
-        td { padding: 12px 15px; border-bottom: 1px solid #eee; }
-        
-        .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; display: inline-block; }
-        .picking { background: #fff3cd; color: #856404; }
-        .packing { background: #f8d7da; color: #721c24; }
-        .manifest { background: #d1ecf1; color: #0c5460; }
-        
-        .controls { display: flex; justify-content: space-between; padding: 15px; background: #fff; border-top: 1px solid #eee; }
-        button { padding: 8px 15px; background: #2c3e50; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+            --primary: #2563eb;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --success: #16a34a;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 22px;
+            color: #1e293b;
+        }
+
+        .sync-badge {
+            background: #dcfce7;
+            color: #15803d;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sync-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #16a34a;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Metric Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 18px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            text-align: center;
+        }
+
+        .card-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-value {
+            font-size: 28px;
+            font-weight: 800;
+            margin-top: 8px;
+        }
+
+        .val-total { color: #1e293b; }
+        .val-picking { color: #d97706; }
+        .val-packing { color: #dc2626; }
+        .val-manifest { color: #2563eb; }
+
+        /* Table Styling */
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: #1e293b;
+            color: #ffffff;
+            font-size: 12px;
+            text-transform: uppercase;
+            padding: 14px 16px;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* Badges & Tags */
+        .badge-status {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .status-picking { background: #fef3c7; color: #b45309; }
+        .status-packing { background: #fee2e2; color: #b91c1c; }
+        .status-manifest { background: #dbeafe; color: #1d4ed8; }
+
+        .sla-breached {
+            color: #dc2626;
+            font-weight: 700;
+            background: #fef2f2;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #fecaca;
+        }
+
+        .sla-active {
+            color: #16a34a;
+            font-weight: 600;
+        }
+
+        .channel-tag {
+            font-weight: 600;
+            color: #475569;
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2>⚡ Live Pending Orders Control Tower (Filtered)</h2>
-        <span id="sync-status" style="color: #27ae60; font-weight: bold;">● Live Sync Active</span>
+        <h2>⚡ Live Pending Orders Control Tower (SLA Sorted)</h2>
+        <div class="sync-badge">Live Sync Active</div>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-card"><h3>Active Pending Orders</h3><div id="cnt-total">0</div></div>
-        <div class="stat-card"><h3>Pending Picking</h3><div id="cnt-picking" style="color: #e67e22;">0</div></div>
-        <div class="stat-card"><h3>Pending Packing</h3><div id="cnt-packing" style="color: #e74c3c;">0</div></div>
-        <div class="stat-card"><h3>Pending Manifest</h3><div id="cnt-manifest" style="color: #2980b9;">0</div></div>
+    <!-- Metrics Summary -->
+    <div class="metrics-grid">
+        <div class="card">
+            <div class="card-title">Active Pending Orders</div>
+            <div class="card-value val-total" id="cnt-total">0</div>
+        </div>
+        <div class="card">
+            <div class="card-title">Pending Picking</div>
+            <div class="card-value val-picking" id="cnt-picking">0</div>
+        </div>
+        <div class="card">
+            <div class="card-title">Pending Packing</div>
+            <div class="card-value val-packing" id="cnt-packing">0</div>
+        </div>
+        <div class="card">
+            <div class="card-title">Pending Manifest</div>
+            <div class="card-value val-manifest" id="cnt-manifest">0</div>
+        </div>
     </div>
 
+    <!-- Live Orders Table -->
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th>Order ID / Channel</th>
+                    <th>SLA Status / Time</th>
+                    <th>Channel Name</th>
+                    <th>Order Number / ID</th>
                     <th>Batch Number</th>
-                    <th>SKU / Product Info</th>
+                    <th>Product Info / SKU</th>
                     <th>Current Status</th>
-                    <th>SLA Time / Breach Status</th>
                 </tr>
             </thead>
-            <tbody id="order-rows">
-                <tr><td colspan="5" style="text-align: center;">Waiting for pending orders stream...</td></tr>
+            <tbody id="orders-tbody">
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 20px; color: #94a3b8;">
+                        Waiting for live data from Browntape...
+                    </td>
+                </tr>
             </tbody>
         </table>
-        
-        <div class="controls">
-            <button id="btn-prev" onclick="changePage(-1)">Previous</button>
-            <span id="page-info">Page 1</span>
-            <button id="btn-next" onclick="changePage(1)">Next</button>
-        </div>
     </div>
 
     <script>
-        let allOrders = [];
-        let currentPage = 1;
-        const pageSize = 100;
-
+        // Real-Time Message Listener from Chrome Extension
         window.addEventListener("message", (event) => {
             if (event.data && event.data.type === "BT_DATA_UPDATE") {
-                allOrders = event.data.data || [];
-                updateCounters();
-                renderTable();
+                renderDashboard(event.data.data || []);
             }
         });
 
-        function updateCounters() {
-            document.getElementById("cnt-total").innerText = allOrders.length;
-            document.getElementById("cnt-picking").innerText = allOrders.filter(o => o.status === "PENDING PICKING").length;
-            document.getElementById("cnt-packing").innerText = allOrders.filter(o => o.status === "PENDING PACKING").length;
-            document.getElementById("cnt-manifest").innerText = allOrders.filter(o => o.status === "PENDING MANIFEST").length;
-        }
+        function renderDashboard(orders) {
+            let total = orders.length;
+            let picking = 0;
+            let packing = 0;
+            let manifest = 0;
 
-        function renderTable() {
-            const tbody = document.getElementById("order-rows");
-            if (allOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: green; font-weight: bold;">🎉 All Orders Processed & Manifested! No Pending Orders.</td></tr>';
-                return;
-            }
-
-            const startIdx = (currentPage - 1) * pageSize;
-            const endIdx = startIdx + pageSize;
-            const pageData = allOrders.slice(startIdx, endIdx);
-
-            const fragment = document.createDocumentFragment();
-
-            pageData.forEach(order => {
-                const tr = document.createElement("tr");
-                let badgeClass = "picking";
-                if (order.status === "PENDING PACKING") badgeClass = "packing";
-                if (order.status === "PENDING MANIFEST") badgeClass = "manifest";
-
-                tr.innerHTML = `
-                    <td><b>${order.order_id}</b><br><small style="color:#777;">${order.channel}</small></td>
-                    <td><b style="color:#2980b9;">${order.batch_no}</b></td>
-                    <td>${order.sku}</td>
-                    <td><span class="badge ${badgeClass}">${order.status}</span></td>
-                    <td><b>${order.sla_text}</b></td>
-                `;
-                fragment.appendChild(tr);
+            // SLA Sorting Logic: Breach first, then SLA Active
+            orders.sort((a, b) => {
+                let aBreached = a.sla_text.includes("BREACHED") ? 0 : 1;
+                let bBreached = b.sla_text.includes("BREACHED") ? 0 : 1;
+                return aBreached - bBreached;
             });
 
-            tbody.innerHTML = "";
-            tbody.appendChild(fragment);
+            let tbodyHtml = "";
 
-            const maxPages = Math.ceil(allOrders.length / pageSize) || 1;
-            document.getElementById("page-info").innerText = `Page ${currentPage} of ${maxPages} (${allOrders.length} Pending Orders)`;
-            document.getElementById("btn-prev").disabled = currentPage === 1;
-            document.getElementById("btn-next").disabled = currentPage >= maxPages;
-        }
+            if (orders.length === 0) {
+                tbodyHtml = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: #94a3b8;">No pending orders found. All clear!</td></tr>`;
+            } else {
+                orders.forEach(order => {
+                    // Count Metrics
+                    if (order.status === "PENDING PICKING") picking++;
+                    else if (order.status === "PENDING PACKING") packing++;
+                    else if (order.status === "PENDING MANIFEST") manifest++;
 
-        function changePage(direction) {
-            currentPage += direction;
-            renderTable();
+                    // Status Class Badge
+                    let statusClass = "status-packing";
+                    if (order.status === "PENDING PICKING") statusClass = "status-picking";
+                    if (order.status === "PENDING MANIFEST") statusClass = "status-manifest";
+
+                    // SLA Class
+                    let slaClass = order.sla_text.includes("BREACHED") ? "sla-breached" : "sla-active";
+
+                    tbodyHtml += `
+                        <tr>
+                            <td><span class="${slaClass}">${order.sla_text}</span></td>
+                            <td><span class="channel-tag">${order.channel}</span></td>
+                            <td><strong>${order.order_id}</strong></td>
+                            <td>${order.batch_no}</td>
+                            <td>${order.sku}</td>
+                            <td><span class="badge-status ${statusClass}">${order.status}</span></td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Update DOM Counts
+            document.getElementById("cnt-total").innerText = total;
+            document.getElementById("cnt-picking").innerText = picking;
+            document.getElementById("cnt-packing").innerText = packing;
+            document.getElementById("cnt-manifest").innerText = manifest;
+
+            // Update Table Body
+            document.getElementById("orders-tbody").innerHTML = tbodyHtml;
         }
     </script>
 </body>

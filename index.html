@@ -2,93 +2,112 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Live Pending Orders Control Tower</title>
+    <title>Dual View - Browntape Control Tower</title>
     <style>
-        body { font-family: sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
-        .header { display: flex; justify-content: space-between; background: #fff; padding: 15px; border-radius: 8px; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; }
-        .card { background: #fff; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; }
-        .card-num { font-size: 28px; margin-top: 5px; }
-        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; }
-        th { background: #1e293b; color: #fff; padding: 12px; text-align: left; font-size: 12px; }
-        td { padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 13px; }
-        .sla-breach { color: red; font-weight: bold; background: #ffe6e6; padding: 3px 6px; border-radius: 4px; }
-        .sla-ok { color: green; font-weight: bold; }
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 15px; }
+        .header { background: #1e293b; color: #fff; padding: 12px 20px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .container { display: flex; gap: 15px; margin-top: 15px; }
+        .section { flex: 1; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        .section-title { font-size: 16px; font-weight: bold; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #3b82f6; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #334155; color: #fff; padding: 8px; font-size: 11px; text-align: left; }
+        td { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; }
+        .badge-myntra { background: #fce7f3; color: #be185d; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .badge-fk { background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .sla-tag { color: #dc2626; font-weight: bold; background: #fef2f2; padding: 2px 5px; border-radius: 3px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2>⚡ Live Pending Orders Control Tower (SLA Sorted)</h2>
-        <span style="color: green; font-weight: bold;">● Live Sync Active</span>
+        <h2>⚡ Live Browntape Control Tower (Combined Screen)</h2>
+        <span style="color: #4ade80; font-weight: bold;">● Realtime Sync</span>
     </div>
 
-    <div class="grid">
-        <div class="card">ACTIVE PENDING<div class="card-num" id="c-total">0</div></div>
-        <div class="card">PENDING PICKING<div class="card-num" id="c-pick" style="color:orange;">0</div></div>
-        <div class="card">PENDING PACKING<div class="card-num" id="c-pack" style="color:red;">0</div></div>
-        <div class="card">PENDING MANIFEST<div class="card-num" id="c-mani" style="color:blue;">0</div></div>
-    </div>
+    <div class="container">
+        <!-- SHIPMENTS PAGE DATA -->
+        <div class="section">
+            <div class="section-title" style="border-color: #f59e0b;">📦 BATCHES & SHIPMENTS DATA</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>CHANNEL</th>
+                        <th>BATCH NO</th>
+                        <th>TOTAL</th>
+                        <th>TO ACCEPT</th>
+                        <th>PACKING</th>
+                        <th>MANIFESTED</th>
+                    </tr>
+                </thead>
+                <tbody id="tb-shipments">
+                    <tr><td colspan="6" style="text-align:center;">Open Shipments tab in Browntape...</td></tr>
+                </tbody>
+            </table>
+        </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>SLA STATUS / TIME</th>
-                <th>CHANNEL NAME</th>
-                <th>ORDER NUMBER / ID</th>
-                <th>BATCH NUMBER</th>
-                <th>PRODUCT INFO / SKU</th>
-                <th>CURRENT STATUS</th>
-            </tr>
-        </thead>
-        <tbody id="tb">
-            <tr><td colspan="6" style="text-align:center;">Syncing live data...</td></tr>
-        </tbody>
-    </table>
+        <!-- ORDERS PAGE DATA -->
+        <div class="section">
+            <div class="section-title" style="border-color: #10b981;">🛒 NEW ORDERS & SLA DATA</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ORD REF ID</th>
+                        <th>CHANNEL</th>
+                        <th>SKU CODE</th>
+                        <th>SLA REMAINING</th>
+                    </tr>
+                </thead>
+                <tbody id="tb-orders">
+                    <tr><td colspan="4" style="text-align:center;">Open Orders tab in Browntape...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <script>
-        function checkData() {
+        function checkStorage() {
             if (typeof chrome !== "undefined" && chrome.storage) {
-                chrome.storage.local.get(["LIVE_BT_DATA"], function(res) {
-                    render(res.LIVE_BT_DATA || []);
+                chrome.storage.local.get(["BT_SHIPMENTS", "BT_ORDERS"], (res) => {
+                    renderShipments(res.BT_SHIPMENTS || []);
+                    renderOrders(res.BT_ORDERS || []);
                 });
             }
         }
 
-        window.addEventListener("message", function(e) {
-            if (e.data && e.data.type === "BT_DATA_UPDATE") render(e.data.data);
-        });
-
-        function render(data) {
-            if (!data || data.length === 0) return;
-            let total = data.length, pick = 0, pack = 0, mani = 0;
+        function renderShipments(data) {
+            if (data.length === 0) return;
             let html = "";
-
-            data.forEach(o => {
-                if (o.status.includes("PICKING")) pick++;
-                if (o.status.includes("PACKING")) pack++;
-                if (o.status.includes("MANIFEST")) mani++;
-
-                let slaCls = o.sla_text.includes("BREACHED") ? "sla-breach" : "sla-ok";
-
+            data.forEach(s => {
+                let badge = s.channel === "Myntra" ? "badge-myntra" : "badge-fk";
                 html += `<tr>
-                    <td><span class="${slaCls}">${o.sla_text}</span></td>
-                    <td><b>${o.channel}</b></td>
-                    <td><b>${o.order_id}</b></td>
-                    <td>${o.batch_no}</td>
-                    <td>${o.sku}</td>
-                    <td><b>${o.status}</b></td>
+                    <td><span class="${badge}">${s.channel}</span></td>
+                    <td><b>${s.batch_no}</b></td>
+                    <td>${s.total}</td>
+                    <td><b style="color:orange;">${s.to_accept}</b></td>
+                    <td><b style="color:red;">${s.packing}</b></td>
+                    <td><b style="color:blue;">${s.manifest}</b></td>
                 </tr>`;
             });
-
-            document.getElementById("c-total").innerText = total;
-            document.getElementById("c-pick").innerText = pick;
-            document.getElementById("c-pack").innerText = pack;
-            document.getElementById("c-mani").innerText = mani;
-            document.getElementById("tb").innerHTML = html;
+            document.getElementById("tb-shipments").innerHTML = html;
         }
 
-        setInterval(checkData, 1000);
+        function renderOrders(data) {
+            if (data.length === 0) return;
+            let html = "";
+            data.forEach(o => {
+                let badge = o.channel === "Myntra" ? "badge-myntra" : "badge-fk";
+                html += `<tr>
+                    <td><b>${o.order_id}</b></td>
+                    <td><span class="${badge}">${o.channel}</span></td>
+                    <td><code>${o.sku}</code></td>
+                    <td><span class="sla-tag">${o.sla_text}</span></td>
+                </tr>`;
+            });
+            document.getElementById("tb-orders").innerHTML = html;
+        }
+
+        setInterval(checkStorage, 800);
+        checkStorage();
     </script>
 </body>
 </html>
